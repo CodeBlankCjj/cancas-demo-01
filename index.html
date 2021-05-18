@@ -10,29 +10,75 @@
 <body>
   <canvas id="canvas"></canvas>
   <script>
+    //获取id为canvas的元素
     let canvas = document.getElementById('canvas')
+
+    //获取文档的宽度和高度
     canvas.width = document.documentElement.clientWidth
     canvas.height = document.documentElement.clientHeight
 
+    //"2d", 建立一个 CanvasRenderingContext2D 二维渲染上下文
     let ctx = canvas.getContext('2d')
 
-    let painting = false
-    ctx.fillStyle = 'black'
+    //strokeStyle 属性设置不同的颜色
+    ctx.strokeStyle = 'red'
+    //lineWidth 8像素宽
+    ctx.lineWidth = 8
+    //lineCap 属性绘制以圆形结尾的线段
+    ctx.lineCap = 'round'
 
-    canvas.onmousedown = () => { painting = true }
-
-    canvas.onmousemove = (e) => {
-      if (painting === true) {
-        ctx.beginPath()
-        ctx.arc(e.clientX, e.clientY, 1, 0, 2 * Math.PI)
-        ctx.stroke()
-        ctx.fill()
-      } else {
-        console.log('什么都不做')
-      }
+    function drawLine(x1, y1, x2,y2) {
+      //清空子路径列表开始一个新路径
+      ctx.beginPath()
+      //新的子路径的起始点移动到(x，y)
+      ctx.moveTo(x1, y1)
+      //使用直线连接子路径的终点到x，y坐标
+      ctx.lineTo(x2, y2)
+      //绘制一条路径
+      ctx.stroke()
     }
+    
+    //存储状态
+    let painting = false
+    let last
+ 
+    //判断当前设备是否支持 ontouchstart
+    let isTouchDevice = 'ontouchstart' in document.documentElement
 
-    canvas.onmouseup = () => { painting = false }
+    if (isTouchDevice) {
+      //支持
+      //记录初始位置保留状态
+      canvas.ontouchstart = (e) => {
+        let x = e.touches[0].clientX
+        let y = e.touches[0].clientY
+        last = [x, y]
+      }
+      //在上一个状态与下一个状态之间连线
+      canvas.ontouchmove = (e) => {
+        let x = e.touches[0].clientX
+        let y = e.touches[0].clientY
+        drawLine(...last, x, y)
+        last = [x, y]
+      }
+    } else {
+      //不支持
+      // 鼠标按下 并记录并保留状态
+      canvas.onmousedown = (e) => {
+        painting = true
+        last = [e.clientX, e.clientY]
+        console.log(...last);
+      }
+      canvas.onmousemove = (e) => {
+        //鼠标按下
+        if (painting === true) {
+          drawLine(...last, e.clientX, e.clientY)
+          last = [e.clientX, e.clientY]
+        }
+      }
+      // 鼠标弹起
+      canvas.onmouseup = () => { painting = false }
+    }
+    
   </script>
 </body>
 </html>
